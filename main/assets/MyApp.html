@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title></title>
+    <meta name="viewport" content="width=device-width,target-densitydpi=device-dpi, initial-scale=1, maximum-scale=0.8">
+    <link rel="stylesheet" type="text/css" href="css/MyApp.css">
+    <link rel="stylesheet" href="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.css" />
+    <script src="http://code.jquery.com/jquery-1.11.1.min.js"></script>
+    <script src="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.0.6/angular.min.js"></script>
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+
+</head>
+<body ng-app="ItemsTableApp" >
+
+
+<div ng-controller="MainController">
+<div data-role="page" id="main-dialog" data-close-btn="none">
+
+    <!--Main Page-->
+    <div ng-show="connected">
+        <form>
+            <div data-role="header" data-theme="b">
+                <button ng-click="OpenPanel()" class="ui-btn ui-icon-bars ui-btn-icon-left" data-theme="b">Options</button>
+                <h4>Welcome {{ userName }}!</h4>
+            </div>
+            <div data-role="main" class="ui-content" data-dialog="true">
+
+
+                <div data-role="header" data-theme="b" >
+                    <h4>Balance: {{ balance }} Shekels</h4>
+                    <a ng-click="ShowAddItemPage()" data-transition="pop" class="ui-btn-right ui-btn-icon-notext" data-icon="plus" data-iconpos="notext"></a>
+                </div>
+                <div data-role="main"  id="main-screenBody"  class="ui-special-scroll ui-content">
+
+                    <table data-role="table" data-mode="reflow" class="ui-responsive">
+                        <thead>
+                        <tr>
+                            <th data-priority="1">Purchase Date</th>
+                            <th data-priority="2">Item Type</th>
+                            <th data-priority="3">Item Description</th>
+                            <th data-priority="4">Amount</th>
+                            <th data-priority="5">Price Per Unit</th>
+                            <th data-priority="6">Total Amount</th>
+                            <th data-priority="7">Remove Item</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr ng-repeat="item in itemsTable">
+                            <td> {{ item.Date }}</td>
+                            <td>{{ item.itemType }}</td>
+                            <td> {{ item.itemDescription }}</td>
+                            <td> {{ item.amount }}</td>
+                            <td> {{ item.price }} Shekels</td>
+                            <td>{{ item.amount * item.price }} Shekels</td>
+                            <td> <button ng-click="RemoveItem(item.dataID)" data-role="button" data-theme="b" data-icon="delete" data-iconpos="right">Remove</button></td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div data-role="footer" data-theme="b">
+                    <h4>Remaining Budget: {{ remaining }} Shekels</h4>
+                </div>
+
+            </div>
+
+
+            <div data-role="panel" data-theme="b" data-display="push" id="SettingsPanel" data-position="left">
+                <ul data-role="listview">
+                    <li><h4 data-theme="b">Settings Panel</h4></li>
+                    <li><a ng-click="OpenAboutPopup()" data-rel="popup" class="ui-btn" data-theme="b">About</a> </li>
+                    <li><a ng-click="BackToLoginScreen()" class="ui-btn" data-theme="b" data-rel="close">Log Out</a> </li>
+                    <li><a ng-click="OpenSetAccountBalancePopup()" data-rel="popup" class="ui-btn" data-theme="b">Define Account Balance</a></li>
+                    <li><a ng-click="OpenClearListPopup()" data-rel="popup" data-theme="b" class="ui-btn">Clear List</a> </li>
+                    <li><a ng-click="GoToDiagramPage()" class="ui-btn" data-theme="b">Review Expense Diagram</a></li>
+                    <li><a ng-click="ClosePanel()" data-theme="d" data-rel="close">Close Panel</a></li>
+                </ul>
+            </div>
+
+            <!--Clear List popup-->
+            <div data-role="popup" data-transition="pop" data-position="center" id="ClearListPopup" data-overlay-theme="b" data-position-to="window">
+                <div data-role="header" data-theme="b">
+                    <h4>Clear List?</h4>
+                    <a ng-click="closeClearListPopup()" data-rel="back" data-icon="delete" data-iconpos="notext" class="ui-btn-right"></a>
+                </div>
+                <div data-role="main" class="ui-content">
+                    <p>Are you Sure you want to clear the Shopping List?</p>
+                    <div id="PopupButtons">
+                        <button ng-click="clearList()" data-role="button" data-theme="b" data-inline="true">Yes</button>
+                        <button ng-click="closeClearListPopup()" data-role="button" data-theme="b" data-inline="true" data-rel="back">No</button>
+                    </div>
+                </div>
+            </div>
+
+            <!--About popup-->
+            <div data-role="popup" data-transition="pop" data-position="center" id="AboutPopup" data-overlay-theme="b" data-position-to="window">
+                <div data-role="header" data-theme="b">
+                    <h4>About Application</h4>
+                </div>
+                <div data-role="main" class="ui-content">
+                    <p>This App was made by:<br>
+                        Dor Shoval and Rafi Rosenbaum
+                    </p>
+                    <button data-role="button" data-theme="b" ng-click="CloseAboutPopup()">Close</button>
+                </div>
+            </div>
+
+            <!--Exceeding Balance popup-->
+            <div data-role="popup" data-transition="pop" data-position="center" id="ExceedingBalancePopup" data-overlay-theme="b" data-position-to="window">
+                <div data-role="header" data-theme="b">
+                    <h4>Exceeding Balance</h4>
+                </div>
+                <div data-role="main" class="ui-content">
+                    <img src="img/Error.png" height="30" width="30" data-position="center">
+                    <h4>Please Note!</h4>
+                    <p>Your Exceeding from your Balance!</p>
+                    <a data-role="button" data-theme="b" ng-click="CloseExceedingBalancePopup()">Close</a>
+                </div>
+            </div>
+
+            <!--Invalid Email or Password popup-->
+            <div data-role="popup" data-transition="pop" data-position="center" id="InvalidEmailOrPassword" data-overlay-theme="b" data-position-to="window">
+                <div data-role="header" data-theme="b">
+                    <h4>Error</h4>
+                </div>
+                <div data-role="main" class="ui-content">
+                    <p>Invalid Email or Password<br>Please try again</p>
+                    <button data-role="button" data-theme="b" ng-click="CloseErrorPopup()">OK</button>
+                </div>
+            </div>
+
+            <!--Sign up successfully popup-->
+            <div data-role="popup" data-transition="pop" data-position="center" id="SignUpSuccessfullyPopup" data-overlay-theme="b" data-position-to="window">
+                <div data-role="header" data-theme="b">
+                    <h4>Welcome {{ signUpUserName }}</h4>
+                </div>
+                <div data-role="main" class="ui-content">
+                    <p>Your User has<br>Successfully created!</p>
+                    <button data-role="button" data-theme="b" ng-click="GoBackToLoginScreenFromSignUp()">OK</button>
+                </div>
+            </div>
+
+            <!--Set Account Balance Popup-->
+            <div data-role="popup" data-transition="pop" data-position="center" id="SetAccoutBalancePopup" data-overlay-theme="b" data-position-to="window">
+                <div data-role="header" data-theme="b">
+                    <h3>Set Balance</h3>
+                    <button ng-click="closeSetAccountBalance()" data-rel="back" data-icon="delete" data-iconpos="notext" class="ui-btn-right"></button>
+                </div>
+                <div data-role="main" class="ui-content">
+                    <p>Set your Current Balance:</p>
+                    <input type="number" onkeydown="limit(this)" onkeyup="limit(this)" id="balanceNumber" ng-model="balanceNumber"/>
+                    <div>
+                        <a data-role="button" data-theme="b" ng-click="setBalance()" required>Set Balance</a>
+                    </div>
+                </div>
+            </div>
+
+        </form>
+    </div>
+
+
+
+    <!--Login Page-->
+    <div ng-show="LoginPage">
+        <div id="LoginPage">
+            <div data-role="header" data-theme="b">
+                <h4>My Shopping List</h4>
+            </div>
+            <div id="loginMain" class="ui-content">
+            <form novalidate name="LoginForm" class="LoginClass">
+                <div>
+                    <label for="enterEmail">Email:</label>
+                    <input  type="email" name="enterEmail" id="enterEmail" placeholder="Your Email Here..." ng-model="enterEmail" required>
+                    <p style="text-align: center !important; color: red" ng-show="LoginForm.enterEmail.$dirty && LoginForm.enterEmail.$error.required">Required Field</p>
+                    <p style="text-align: center !important; color: red" ng-show="LoginForm.enterEmail.$error.email">Not a Valid Email</p>
+                </div>
+                <div>
+                    <label for="Password">Password:</label>
+                    <input type="password" name="Password" id="Password" placeholder="Your Password Here..." ng-model="Password" required>
+                    <p style="text-align: center !important; color: red" ng-show="LoginForm.Password.$dirty && LoginForm.Password.$error.required">Required Field</p>
+                </div>
+                <div>
+                    <button ng-click="CheckCredentials()" id="Login" data-role="button" data-theme="b" data-inline="true">Login</button>
+                    <a ng-click="GoToSignUpPage()" data-role="button" data-theme="b" data-inline="true">Sign Up</a>
+                </div>
+                <a href="#ForgotPassword" style="font-size: small">Forgot Password?</a>
+            </form>
+            </div>
+        </div>
+    </div>
+
+    <!--Add Item Page-->
+    <div ng-show="AddItemPage">
+        <div id="AddingItemPage">
+            <div data-role="header" data-theme="b">
+                <h4>Add Item</h4>
+                <a ng-click="GoBackToMainScreen()" data-icon="delete" data-iconpos="notext" class="ui-btn-right"></a>
+            </div>
+
+            <!--Adding Item Screen buttons-->
+            <div data-role="main" id="AddItemBody" class="ui-content">
+                <div data-role="fieldcontain">
+                    <label for="Date">Purchase Date:</label>
+                    <input type="date" id="Date" name="Date" ng-model="Date" required>
+                </div>
+                <div data-role="fieldcontain">
+                    <label for="ItemName">Item Category:</label>
+                    <select name="ItemName" id="ItemName" ng-model="ItemName" placeholder="Search Item..." required>
+                        <option selected="selected">Select</option>
+                        <option>Drinks</option>
+                        <option>Snacks</option>
+                        <option>Meat</option>
+                        <option>Dairy</option>
+                    </select>
+                </div>
+                <div data-role="fieldcontain">
+                    <label for="ItemDescription">Item Description:</label>
+                    <input ng-model="ItemDescription" type="text" name="ItemDescription" id="ItemDescription" required>
+                </div>
+                <div data-role="fieldcontain">
+                    <label for="Amount">Amount:</label>
+                    <input type="number" name="Amount" id="Amount" min="1" max="300" ng-model="Amount" required>
+                </div>
+                <div data-role="fieldcontain">
+                    <label for="Price">Price:</label>
+                    <input type="number" id="Price" name="Price" min="0" step="0.01" ng-model="Price" required>
+                </div>
+                <div data-role="fieldcontain">
+                    <label for="Total">Total Amount:</label>
+                    <span id="Total" ng-model="Total">{{  CalculateTotalAmount() }} Shekels</span>
+                </div>
+                <div>
+                    <button ng-click="AddItem()" ng-disabled="CheckAddItemFields()" data-role="button" data-theme="b" >Submit</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!--Sign Up Page-->
+    <div ng-show="SignUpPage">
+        <div id="SignUp">
+        <div data-role="header" data-theme="b">
+            <h4>Sign Up</h4>
+            <a ng-click="GoBackToLoginScreenFromSignUp()" data-icon="delete" data-iconpos="notext" class="ui-btn-right"></a>
+        </div>
+        <div data-role="main" id="signUpMain" class="ui-content">
+                <div data-role="fieldcontain">
+                    <label for="SignUpEmail">Your Email:</label>
+                    <input ng-model="SignUpEmailInput" type="email" id="SignUpEmail" name="SignUpEmail" required>
+                </div>
+                <div data-role="fieldcontain">
+                    <label for="inputPassword">Choose Password:</label>
+                    <input ng-model="SignUpPasswordInput" type="password" id="inputPassword" name="inputPassword" required>
+                </div>
+                <div data-role="fieldcontain">
+                    <label for="confirmPassword">Confirm Password:</label>
+                    <input ng-model="SignUpConfirmPasswordInput" type="password" id="confirmPassword" name="confirmPassword" required>
+                </div>
+                <div data-role="fieldcontain">
+                    <label for="name">Your Name:</label>
+                    <input ng-model="SignUpFullNameInput" type="text" id="name" name="name" required>
+                </div>
+                <div data-role="fieldcontain">
+                    <button ng-click="SignUp()" ng-disabled="CheckAllFields()" data-role="button" data-theme="b">Submit</button>
+                </div>
+        </div>
+        </div>
+    </div>
+
+    <!--Chart Page-->
+    <div ng-show="ChartPage">
+        <div id="ChartPage">
+            <div data-role="header" data-theme="b">
+                <h4>Expense Diagram</h4>
+            </div>
+            <div data-role="main" class="ui-content" id="DiagramPageBody">
+                <div id="myColumnChart"></div>
+                <button ng-click="GoBackToMainScreenFromChartPage()" data-role="button" data-theme="b">Back</button>
+            </div>
+        </div>
+    </div>
+
+</div>
+</div>
+
+
+<script src="Javascript/MyApp.js"></script>
+</body>
+</html>
